@@ -1,0 +1,21 @@
+{
+  "name": "eva-blog",
+  "version": "0.1.0",
+  "description": "Eva-themed personal blog with admin, articles, SQLite DB, GitHub Actions deployment",
+  "scripts": {
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "build": "echo Build step (skeleton)"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "sqlite3": "^5.0.11"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
