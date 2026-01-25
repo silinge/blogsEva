@@ -16,17 +16,19 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # 确保进入的是正确的目录
             cd /var/www/blog
-            # 1. 拉取最新代码
-            git pull origin main
             
-            # 2. 安装/更新依赖
+            # 确认该目录确实是一个 git 仓库
+            if [ ! -d ".git" ]; then
+              echo "Error: /var/www/blog is not a git repository"
+              exit 1
+            fi
+
+            git pull origin main
             npm install --production
             
-            # 3. 使用 PM2 启动或重启服务
-            # --name "my-blog" 给进程起个名字方便管理
+            # 使用绝对路径启动 pm2 保证准确
             pm2 delete my-blog || true
-            pm2 start server/app.js --name "my-blog" --env .env
-            
-            # 4. 保存 PM2 状态，确保开机自启
+            pm2 start /var/www/blog/server/app.js --name "my-blog" --env /var/www/blog/.env
             pm2 save
