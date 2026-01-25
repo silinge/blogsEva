@@ -1,4 +1,4 @@
-name: Deploy Node.js Blog
+name: Deploy  BlogsEva
 
 on:
   push:
