@@ -22,13 +22,15 @@ app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use(express.static(path.join(__dirname, '../views')));
 
 db.initDB().then(() => {
+  const adminUser = process.env.ADMIN_USERNAME || 'admin';
+  const adminPass = process.env.ADMIN_PASSWORD || 'password';
+  console.log(`[startup] Admin Config: Username='${adminUser}', Password Length=${adminPass ? adminPass.length : 0}`);
+
   // API routes under /api
   app.use('/api', postsRouter);
   // Authentication endpoints
-app.post('/api/login', (req, res) => {
+  app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
-    const adminUser = process.env.ADMIN_USERNAME || 'admin';
-    const adminPass = process.env.ADMIN_PASSWORD || 'password';
     console.log(`Login attempt: user=${username}, ip=${req.ip}`);
     if (username === adminUser && password === adminPass) {
       req.session.user = 'admin';

@@ -1,5 +1,6 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
 // DB path: data/posts.db
 const dbPath = path.join(__dirname, '../data/posts.db');
@@ -17,7 +18,27 @@ function initDB() {
         updated_at TEXT,
         status TEXT
       )`, [], (err) => {
-        if (err) return reject(err);
+        if (err) {
+          // Handle corrupted database file
+          if (err.code === 'SQLITE_NOTADB') {
+            console.error('Database file is corrupted (SQLITE_NOTADB). Deleting and recreating:', dbPath);
+            // Close the database connection before deleting the file
+            db.close((closeErr) => {
+              if (closeErr) console.error('Error closing corrupted DB:', closeErr);
+              try {
+                if (fs.existsSync(dbPath)) {
+                  fs.unlinkSync(dbPath);
+                }
+                // Retry initialization recursively
+                initDB().then(resolve).catch(reject);
+              } catch (unlinkErr) {
+                reject(unlinkErr);
+              }
+            });
+            return;
+          }
+          return reject(err);
+        }
         resolve(true);
       });
     });
@@ -46,7 +67,7 @@ function createPost(post) {
   return new Promise((resolve, reject) => {
     const { id, title, content, created_at, updated_at, status } = post;
     db.run("INSERT INTO posts (id, title, content, created_at, updated_at, status) VALUES (?, ?, ?, ?, ?, ?)",
-      [id, title, content, created_at, updated_at, status], function(err) {
+      [id, title, content, created_at, updated_at, status], function (err) {
         if (err) return reject(err);
         resolve(this.lastID);
       });
@@ -64,7 +85,7 @@ function updatePost(id, fields) {
     if (updates.length === 0) return resolve(0);
     params.push(id);
     const sql = `UPDATE posts SET ${updates.join(', ')} WHERE id = ?`;
-    db.run(sql, params, function(err) {
+    db.run(sql, params, function (err) {
       if (err) return reject(err);
       resolve(this.changes);
     });
@@ -73,7 +94,7 @@ function updatePost(id, fields) {
 
 function deletePost(id) {
   return new Promise((resolve, reject) => {
-    db.run("DELETE FROM posts WHERE id = ?", [id], function(err) {
+    db.run("DELETE FROM posts WHERE id = ?", [id], function (err) {
       if (err) return reject(err);
       resolve(this.changes);
     });
