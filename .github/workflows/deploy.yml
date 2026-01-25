@@ -16,19 +16,27 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # 确保进入的是正确的目录
+            # 1. 强制加载 NVM 环境 (假设你使用的是 nvm)
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
+            
+            # 2. 如果没用 nvm，尝试加载系统 profile
+            source /etc/profile
+            source ~/.bashrc
+
+            # 3. 进入目录并执行
             cd /var/www/blog
             
-            # 确认该目录确实是一个 git 仓库
             if [ ! -d ".git" ]; then
               echo "Error: /var/www/blog is not a git repository"
               exit 1
             fi
 
             git pull origin main
+            
+            # 现在 npm 和 pm2 应该可以被找到了
             npm install --production
             
-            # 使用绝对路径启动 pm2 保证准确
             pm2 delete my-blog || true
             pm2 start /var/www/blog/server/app.js --name "my-blog" --env /var/www/blog/.env
             pm2 save
