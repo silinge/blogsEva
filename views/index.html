@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="eva-00">
 <head>
   <meta charset="UTF-8" />
-  <title>Eva Blog - 首页</title>
+  <title>Eva Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/public/css/base.css" />
-  <link id="theme-link" rel="stylesheet" href="/public/css/theme-eva-00.css" />
   <script defer src="/public/js/theme.js"></script>
   <script defer src="/public/js/main.js"></script>
 </head>
@@ -14,15 +13,22 @@
     <h1>Eva Blog</h1>
     <nav><a href="/login">管理员登录</a></nav>
   </header>
+  
   <main class="container">
     <section id="posts" aria-label="文章列表">
-      <p>正在加载文章...</p>
+      <div style="text-align:center;padding:40px;">
+        <p>系统同步率检测中...</p>
+      </div>
     </section>
   </main>
-  <div class="theme-switcher" aria-label="切换主题">
-    <span data-theme="eva-00"></span>
-    <span data-theme="eva-01"></span>
-    <span data-theme="eva-02"></span>
-  </div>
+
+  <footer>
+    <div class="theme-switcher" aria-label="切换主题">
+      <div class="theme-btn" data-theme="eva-00" title="零号机 (Yellow)"></div>
+      <div class="theme-btn" data-theme="eva-01" title="初号机 (Purple)"></div>
+      <div class="theme-btn" data-theme="eva-02" title="二号机 (Red)"></div>
+    </div>
+    <p style="font-size:0.8rem;color:var(--text-secondary);">EVA SYSTEM © 2026</p>
+  </footer>
 </body>
 </html>

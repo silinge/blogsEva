@@ -1,47 +1,140 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="eva-00">
+
 <head>
   <meta charset="UTF-8" />
-  <title>管理员登录</title>
+  <title>身份验证 - MAGI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/public/css/base.css" />
+  <script defer src="/public/js/theme.js"></script>
+  <style>
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+      background: var(--bg-secondary);
+      border-top: 5px solid var(--accent-color);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+
+    .login-card h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border-radius: 4px;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--highlight-color);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .error-msg {
+      color: #e53935;
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
+
 <body>
-  <div class="container" style="max-width:420px;margin:40px auto;">
+  <div class="login-container">
     <div class="login-card">
-      <h2>管理员登录</h2>
+      <h2>身份验证</h2>
       <form id="login-form">
-        <div>
-          <input type="text" name="username" placeholder="用户名" required style="width:100%;padding:8px;" />
+        <div class="form-group">
+          <input type="text" name="username" placeholder="Username" required />
         </div>
-        <div style="margin-top:8px;">
-          <input type="password" name="password" placeholder="密码" required style="width:100%;padding:8px;" />
+        <div class="form-group">
+          <input type="password" name="password" placeholder="Password" required />
         </div>
-        <div style="margin-top:12px;">
-          <button type="submit">登录</button>
-        </div>
-        <div id="login-status" style="color:red;margin-top:8px;"></div>
+        <button type="submit">Access System</button>
+        <div id="login-status" class="error-msg"></div>
       </form>
     </div>
   </div>
+
+  <footer>
+    <div class="theme-switcher">
+      <div class="theme-btn" data-theme="eva-00"></div>
+      <div class="theme-btn" data-theme="eva-01"></div>
+      <div class="theme-btn" data-theme="eva-02"></div>
+    </div>
+  </footer>
+
   <script>
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const username = fd.get('username');
       const password = fd.get('password');
-      const resp = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      if (resp.ok) {
-        window.location.href = '/admin';
-      } else {
-        const data = await resp.json();
-        document.getElementById('login-status').innerText = data.error || '登录失败';
+      const btn = e.target.querySelector('button');
+
+      btn.disabled = true;
+      btn.innerText = 'Verifying...';
+
+      try {
+        const resp = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (resp.ok) {
+          window.location.href = '/admin';
+        } else {
+          const data = await resp.json();
+          document.getElementById('login-status').innerText = data.error || 'Access Denied';
+          btn.disabled = false;
+          btn.innerText = 'Access System';
+        }
+      } catch (err) {
+        document.getElementById('login-status').innerText = 'Connection Error';
+        btn.disabled = false;
+        btn.innerText = 'Access System';
       }
     });
   </script>
 </body>
+
 </html>

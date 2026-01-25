@@ -1,71 +1,238 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="eva-00">
+
 <head>
   <meta charset="UTF-8" />
-  <title>后台管理</title>
+  <title>后台管理 - NERV</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/public/css/base.css" />
+  <script defer src="/public/js/theme.js"></script>
+  <style>
+    /* Admin specific overrides */
+    :root {
+      --admin-sidebar-w: 0px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .form-control:focus {
+      outline: 2px solid var(--accent-color);
+    }
+
+    textarea.form-control {
+      min-height: 300px;
+      resize: vertical;
+    }
+
+    .post-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      transition: background 0.2s;
+    }
+
+    .post-item:hover {
+      background: var(--bg-primary);
+    }
+
+    .post-info h4 {
+      margin: 0 0 5px 0;
+      font-size: 1.1rem;
+    }
+
+    .post-meta-small {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .status-select {
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+    }
+  </style>
 </head>
+
 <body>
   <header>
-    <h1>后台管理</h1>
-    <nav><a href="/admin">仪表盘</a> | <a href="/logout">退出</a></nav>
+    <h1>NERV COMMAND CENTER</h1>
+    <nav>
+      <a href="/" target="_blank">查看站点</a>
+      <a href="#" onclick="logout()">退出登录</a>
+    </nav>
   </header>
-  <main class="container" style="padding:20px;">
-    <section id="new-post" style="margin-bottom:20px;">
-      <h3>新增文章</h3>
-      <form id="new-post-form">
-        <div>
-          <input type="text" name="title" placeholder="文章标题" required style="width:100%;padding:8px;" />
+
+  <main class="container">
+    <div style="display:grid; grid-template-columns: 1fr; gap: 30px;">
+
+      <!-- Editor Section -->
+      <section id="editor-section" class="post-card">
+        <h2 id="form-title">发布指令</h2>
+        <form id="post-form">
+          <input type="hidden" id="post-id" name="id" />
+
+          <div class="form-group">
+            <input type="text" id="post-title" name="title" class="form-control" placeholder="输入标题..." required />
+          </div>
+
+          <div class="form-group">
+            <select id="post-status" name="status" class="form-control" style="width: auto; display: inline-block;">
+              <option value="draft">草稿 (Draft)</option>
+              <option value="published">发布 (Published)</option>
+            </select>
+            <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:10px;">选择状态以决定是否公开</span>
+          </div>
+
+          <div class="form-group">
+            <textarea id="post-content" name="content" class="form-control" placeholder="输入内容 (支持 HTML)..."
+              required></textarea>
+          </div>
+
+          <div class="form-group" style="display:flex; gap:10px;">
+            <button type="submit" class="btn btn-primary">提交 / 更新</button>
+            <button type="button" class="btn" onclick="resetForm()" style="background:#ccc;color:#333;">重置</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- List Section -->
+      <section>
+        <h3 style="border-bottom:2px solid var(--accent-color); padding-bottom:10px; margin-bottom:20px;">档案列表</h3>
+        <div id="posts-list" style="border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
+          <div style="padding:20px; text-align:center;">读取中...</div>
         </div>
-        <div>
-          <textarea name="content" placeholder="内容，HTML 支持" required style="width:100%;height:200px;padding:8px;margin-top:8px;"></textarea>
-        </div>
-        <div style="margin-top:8px;">
-          <button type="submit">创建</button>
-        </div>
-      </form>
-    </section>
-    <section id="posts-list">
-      <h3>文章列表</h3>
-      <div id="list" style="display:flex;flex-direction:column;gap:8px;"></div>
-    </section>
+      </section>
+
+    </div>
   </main>
+
+  <footer>
+    <div class="theme-switcher">
+      <div class="theme-btn" data-theme="eva-00"></div>
+      <div class="theme-btn" data-theme="eva-01"></div>
+      <div class="theme-btn" data-theme="eva-02"></div>
+    </div>
+  </footer>
+
   <script>
+    const API_URL = '/api/posts';
+
     async function fetchPosts() {
-      const resp = await fetch('/api/posts');
-      const posts = await resp.json();
-      const list = document.getElementById('list');
+      try {
+        const res = await fetch(API_URL);
+        const posts = await res.json();
+        posts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Desc
+        renderList(posts);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderList(posts) {
+      const list = document.getElementById('posts-list');
+      if (posts.length === 0) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;">暂无数据</div>';
+        return;
+      }
       list.innerHTML = posts.map(p => `
-        <div class="post-preview" style="border:1px solid #ddd;padding:8px;border-radius:6px;background:#fff;">
-          <strong>${escapeHtml(p.title||'')}</strong><br/>
-          <small>${escapeHtml(p.created_at||'')}</small> • <em>${escapeHtml(p.status||'draft')}</em>
+        <div class="post-item">
+          <div class="post-info">
+            <h4>${escapeHtml(p.title)}</h4>
+            <div class="post-meta-small">
+              <span class="status-badge status-${p.status || 'draft'}">${p.status === 'published' ? '已发布' : '草稿'}</span>
+              <span>${new Date(p.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+          <div class="admin-actions">
+            <button class="btn btn-small" style="background:var(--accent-color);color:#000;" onclick='editPost(${JSON.stringify(p).replace(/'/g, "&#39;")})'>编辑</button>
+            <button class="btn btn-small btn-danger" onclick="deletePost('${p.id}')">删除</button>
+          </div>
         </div>
       `).join('');
     }
-    function escapeHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    }
-    document.addEventListener('DOMContentLoaded', () => {
-      fetchPosts();
-      document.getElementById('new-post-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const title = fd.get('title');
-        const content = fd.get('content');
-        const resp = await fetch('/api/posts', {
-          method: 'POST',
+
+    // Form Handler
+    document.getElementById('post-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('post-id').value;
+      const title = document.getElementById('post-title').value;
+      const content = document.getElementById('post-content').value;
+      const status = document.getElementById('post-status').value;
+
+      const body = { title, content, status };
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `${API_URL}/${id}` : API_URL;
+
+      try {
+        const res = await fetch(url, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title, content, status: 'draft' })
+          body: JSON.stringify(body)
         });
-        if (resp.ok) {
-          e.target.reset();
+        if (res.ok) {
+          resetForm();
           fetchPosts();
+          alert(id ? '更新成功' : '发布成功');
         } else {
-          alert('创建失败');
+          alert('操作失败');
         }
-      });
+      } catch (err) {
+        console.error(err);
+        alert('网络错误');
+      }
     });
+
+    function editPost(post) {
+      document.getElementById('form-title').innerText = '编辑指令: ' + post.id.substring(0, 8);
+      document.getElementById('post-id').value = post.id;
+      document.getElementById('post-title').value = post.title;
+      document.getElementById('post-content').value = post.content;
+      document.getElementById('post-status').value = post.status || 'draft';
+      document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function deletePost(id) {
+      if (!confirm('确认删除该档案？此操作不可逆。')) return;
+      try {
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchPosts();
+      } catch (e) { console.error(e); }
+    }
+
+    function resetForm() {
+      document.getElementById('post-form').reset();
+      document.getElementById('post-id').value = '';
+      document.getElementById('form-title').innerText = '发布指令';
+    }
+
+    async function logout() {
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', fetchPosts);
   </script>
 </body>
+
 </html>
