@@ -3,11 +3,23 @@ const path = require('path');
 const fs = require('fs');
 
 // DB path: data/posts.db
-const dbPath = path.join(__dirname, '../data/posts.db');
+const dataDir = path.join(__dirname, '../data');
+const dbPath = path.join(dataDir, 'posts.db');
 let db;
 
 function initDB() {
   return new Promise((resolve, reject) => {
+    // Ensure data directory exists
+    if (!fs.existsSync(dataDir)) {
+      console.log('Data directory does not exist. Creating:', dataDir);
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+      } catch (mkdirErr) {
+        return reject(mkdirErr);
+      }
+    }
+
+    console.log('Initializing DB at:', dbPath);
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) return reject(err);
       db.run(`CREATE TABLE IF NOT EXISTS posts (
