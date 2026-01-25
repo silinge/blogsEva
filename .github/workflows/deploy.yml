@@ -1,33 +1,32 @@
-name: Deploy EVA Blog
+name: Deploy Node.js Blog
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          node-version: '18'
-      - name: Install dependencies
-        run: npm ci
-      - name: Copy to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
+          host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "."
-          target: "/home/${{ secrets.VPS_USER }}/eva-blog"
-      - name: Deploy on VPS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/${{ secrets.VPS_USER }}/eva-blog
-            npm ci --production
-            npm run start || pm2 restart eva-blog || true
+            cd /var/www/blog
+            # 1. 拉取最新代码
+            git pull origin main
+            
+            # 2. 安装/更新依赖
+            npm install --production
+            
+            # 3. 使用 PM2 启动或重启服务
+            # --name "my-blog" 给进程起个名字方便管理
+            pm2 delete my-blog || true
+            pm2 start server/app.js --name "my-blog" --env .env
+            
+            # 4. 保存 PM2 状态，确保开机自启
+            pm2 save
