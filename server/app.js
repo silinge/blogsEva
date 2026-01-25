@@ -11,6 +11,13 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug logging for static files
+app.use('/public', (req, res, next) => {
+  console.log(`[static] Request: ${req.url}`);
+  next();
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'evablog-secret',
   resave: false,
