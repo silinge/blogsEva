@@ -1,4 +1,5 @@
 const sqlite3 = require('sqlite3').verbose();
+// Force git update
 const path = require('path');
 const fs = require('fs');
 
