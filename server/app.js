@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
@@ -24,10 +25,11 @@ db.initDB().then(() => {
   // API routes under /api
   app.use('/api', postsRouter);
   // Authentication endpoints
-  app.post('/api/login', (req, res) => {
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     const adminUser = process.env.ADMIN_USERNAME || 'admin';
     const adminPass = process.env.ADMIN_PASSWORD || 'password';
+    console.log(`Login attempt: user=${username}, ip=${req.ip}`);
     if (username === adminUser && password === adminPass) {
       req.session.user = 'admin';
       return res.json({ success: true });
