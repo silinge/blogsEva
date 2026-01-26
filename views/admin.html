@@ -99,7 +99,28 @@
           </div>
 
           <div class="form-group">
-            <textarea id="post-content" name="content" class="form-control" placeholder="输入内容 (支持 HTML)..."
+            <div class="editor-toolbar">
+              <button type="button" class="toolbar-btn" onclick="wrapTag('<b>', '</b>')">B</button>
+              <button type="button" class="toolbar-btn" onclick="wrapTag('<i>', '</i>')">I</button>
+              <button type="button" class="toolbar-btn" onclick="wrapTag('<u>', '</u>')">U</button>
+              <button type="button" class="toolbar-btn" onclick="wrapTag('<h3>', '</h3>')">H3</button>
+              <button type="button" class="toolbar-btn" onclick="insertLink()">🔗</button>
+              <button type="button" class="toolbar-btn" onclick="insertImage()">🖼️</button>
+              <select id="font-size-select" class="toolbar-select" onchange="applyFontSize()">
+                <option value="">字号</option>
+                <option value="0.9rem">小</option>
+                <option value="1rem">标准</option>
+                <option value="1.2rem">中</option>
+                <option value="1.4rem">大</option>
+                <option value="1.8rem">超大</option>
+              </select>
+              <input id="font-color-picker" class="toolbar-color" type="color" value="#00e676" onchange="applyColor()"/>
+              <button type="button" class="toolbar-btn" onclick="applyAlign('left')">⬅️</button>
+              <button type="button" class="toolbar-btn" onclick="applyAlign('center')">⬇️</button>
+              <button type="button" class="toolbar-btn" onclick="applyAlign('right')">➡️</button>
+              <button type="button" class="toolbar-btn" onclick="wrapTag('<hr/>')">➖</button>
+            </div>
+            <textarea id="post-content" name="content" class="editor-textarea" placeholder="输入内容 (支持 HTML)..."
               required></textarea>
           </div>
 
@@ -131,6 +152,44 @@
 
   <script>
     const API_URL = '/api/posts';
+
+    function wrapTag(openTag, closeTag = '') {
+      const textarea = document.getElementById('post-content');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const selected = text.substring(start, end);
+      const next = text.substring(0, start) + openTag + selected + closeTag + text.substring(end);
+      textarea.value = next;
+      textarea.focus();
+      const cursor = start + openTag.length + selected.length + closeTag.length;
+      textarea.selectionStart = cursor;
+      textarea.selectionEnd = cursor;
+    }
+
+    function insertLink() {
+      const url = prompt('输入链接地址', 'https://');
+      if (url) wrapTag(`<a href="${url}" target="_blank">`, '</a>');
+    }
+
+    function insertImage() {
+      const url = prompt('输入图片地址', 'https://');
+      if (url) wrapTag(`<img src="${url}" alt="image" style="max-width:100%;" />`);
+    }
+
+    function applyColor() {
+      const color = document.getElementById('font-color-picker').value;
+      if (color) wrapTag(`<span style="color:${color}">`, '</span>');
+    }
+
+    function applyFontSize() {
+      const size = document.getElementById('font-size-select').value;
+      if (size) wrapTag(`<span style="font-size:${size}">`, '</span>');
+    }
+
+    function applyAlign(align) {
+      wrapTag(`<div style="text-align:${align}">`, '</div>');
+    }
 
     async function fetchPosts() {
       try {
