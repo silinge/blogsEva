@@ -32,7 +32,12 @@ jobs:
               exit 1
             fi
 
-            git pull origin main
+            git fetch origin main
+            if [ -f "package-lock.json" ] && [ -z "$(git status --porcelain -- package-lock.json)" ]; then
+              rm -f package-lock.json
+            fi
+            git reset --hard origin/main
+            git clean -fd
             
             # 现在 npm 和 pm2 应该可以被找到了
             npm install --production
