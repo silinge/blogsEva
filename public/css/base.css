@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&family=Orbitron:wght@400;600;800&family=Roboto:wght@300;400;500;700&display=swap');
+
 /* Base CSS variables - Defaults (Theme 00) */
 :root {
   --bg-primary: #f6f6f6;
@@ -9,7 +11,10 @@
   --accent-color-3: #90a4ae;
   --highlight-color: #2f2f2f;
   --border-color: #e0e0e0;
-  --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-primary: 'Roboto', 'Noto Sans SC', 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-family-heading: 'Orbitron', 'Noto Sans SC', sans-serif;
+  --font-family-serif: 'Noto Serif SC', 'Times New Roman', serif;
+  --font-family: var(--font-family-primary);
   --spacing-unit: 8px;
   --header-height: 60px;
   --glow-color: rgba(253, 216, 53, 0.45);
@@ -135,18 +140,21 @@ header {
 }
 
 header h1 {
+  font-family: var(--font-family-heading);
   font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--text-primary);
   text-shadow: 0 0 14px var(--glow-color);
 }
 
 header nav a {
+  font-family: var(--font-family-heading);
   margin-left: 15px;
   font-size: 0.9rem;
   color: var(--text-secondary);
+  letter-spacing: 0.5px;
 }
 
 header nav a:hover {
@@ -201,11 +209,16 @@ main {
 }
 
 .post-card h2 {
+  font-family: var(--font-family-heading);
+  font-weight: 700;
+  letter-spacing: 0.5px;
   font-size: 1.5rem;
   margin-bottom: 8px;
 }
 
 .post-meta {
+  font-family: var(--font-family-primary);
+  font-weight: 500;
   font-size: 0.85rem;
   color: var(--text-secondary);
   margin-bottom: 12px;
