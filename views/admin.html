@@ -65,6 +65,56 @@
       border-radius: 4px;
       border: 1px solid var(--border-color);
     }
+
+    /* Modal for Preview */
+    .modal {
+      display: none; 
+      position: fixed; 
+      z-index: 1000; 
+      left: 0;
+      top: 0;
+      width: 100%; 
+      height: 100%; 
+      overflow: auto; 
+      background-color: rgba(0,0,0,0.8); 
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background-color: var(--bg-primary);
+      margin: 5% auto; 
+      padding: 40px; 
+      border: 1px solid var(--accent-color);
+      width: 80%; 
+      max-width: 900px;
+      box-shadow: 0 0 20px var(--glow-color);
+      position: relative;
+      min-height: 50vh;
+    }
+
+    .close-modal {
+      color: var(--text-secondary);
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-modal:hover,
+    .close-modal:focus {
+      color: var(--accent-color);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .preview-body {
+      margin-top: 20px;
+      line-height: 1.8;
+    }
+    
+    .preview-body img {
+      max-width: 100%;
+    }
   </style>
 </head>
 
@@ -78,69 +128,84 @@
   </header>
 
   <main class="container">
-    <div style="display:grid; grid-template-columns: 1fr; gap: 30px;">
+    <!-- List Section (Default View) -->
+    <section id="post-list-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--accent-color); padding-bottom:10px; margin-bottom:20px;">
+        <h3 style="margin:0;">档案列表</h3>
+        <button class="btn btn-primary" onclick="showEditor(true)">+ 新建文章</button>
+      </div>
+      <div id="posts-list" style="border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
+        <div style="padding:20px; text-align:center;">读取中...</div>
+      </div>
+    </section>
 
-      <!-- Editor Section -->
-      <section id="editor-section" class="post-card">
-        <h2 id="form-title">发布指令</h2>
-        <form id="post-form">
-          <input type="hidden" id="post-id" name="id" />
+    <!-- Editor Section (Hidden by default) -->
+    <section id="editor-section" class="post-card" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 id="form-title" style="margin:0;">发布指令</h2>
+        <button class="btn" onclick="showList()" style="border:1px solid var(--border-color);">返回列表</button>
+      </div>
+      
+      <form id="post-form">
+        <input type="hidden" id="post-id" name="id" />
 
-          <div class="form-group">
-            <input type="text" id="post-title" name="title" class="form-control" placeholder="输入标题..." required />
-          </div>
-
-          <div class="form-group">
-            <select id="post-status" name="status" class="form-control" style="width: auto; display: inline-block;">
-              <option value="draft">草稿 (Draft)</option>
-              <option value="published">发布 (Published)</option>
-            </select>
-            <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:10px;">选择状态以决定是否公开</span>
-          </div>
-
-          <div class="form-group">
-            <div class="editor-toolbar">
-              <button type="button" class="toolbar-btn" onclick="wrapTag('<b>', '</b>')">B</button>
-              <button type="button" class="toolbar-btn" onclick="wrapTag('<i>', '</i>')">I</button>
-              <button type="button" class="toolbar-btn" onclick="wrapTag('<u>', '</u>')">U</button>
-              <button type="button" class="toolbar-btn" onclick="wrapTag('<h3>', '</h3>')">H3</button>
-              <button type="button" class="toolbar-btn" onclick="insertLink()">🔗</button>
-              <button type="button" class="toolbar-btn" onclick="insertImage()">🖼️</button>
-              <select id="font-size-select" class="toolbar-select" onchange="applyFontSize()">
-                <option value="">字号</option>
-                <option value="0.9rem">小</option>
-                <option value="1rem">标准</option>
-                <option value="1.2rem">中</option>
-                <option value="1.4rem">大</option>
-                <option value="1.8rem">超大</option>
-              </select>
-              <input id="font-color-picker" class="toolbar-color" type="color" value="#00e676" onchange="applyColor()"/>
-              <button type="button" class="toolbar-btn" onclick="applyAlign('left')">⬅️</button>
-              <button type="button" class="toolbar-btn" onclick="applyAlign('center')">⬇️</button>
-              <button type="button" class="toolbar-btn" onclick="applyAlign('right')">➡️</button>
-              <button type="button" class="toolbar-btn" onclick="wrapTag('<hr/>')">➖</button>
-            </div>
-            <textarea id="post-content" name="content" class="editor-textarea" placeholder="输入内容 (支持 HTML)..."
-              required></textarea>
-          </div>
-
-          <div class="form-group" style="display:flex; gap:10px;">
-            <button type="submit" class="btn btn-primary">提交 / 更新</button>
-            <button type="button" class="btn" onclick="resetForm()" style="background:#ccc;color:#333;">重置</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- List Section -->
-      <section>
-        <h3 style="border-bottom:2px solid var(--accent-color); padding-bottom:10px; margin-bottom:20px;">档案列表</h3>
-        <div id="posts-list" style="border:1px solid var(--border-color); border-radius:8px; overflow:hidden;">
-          <div style="padding:20px; text-align:center;">读取中...</div>
+        <div class="form-group">
+          <input type="text" id="post-title" name="title" class="form-control" placeholder="输入标题..." required />
         </div>
-      </section>
 
-    </div>
+        <div class="form-group">
+          <select id="post-status" name="status" class="form-control" style="width: auto; display: inline-block;">
+            <option value="published" selected>发布 (Published)</option>
+            <option value="draft">草稿 (Draft)</option>
+          </select>
+          <span style="font-size:0.8rem; color:var(--text-secondary); margin-left:10px;">选择状态以决定是否公开</span>
+        </div>
+
+        <div class="form-group">
+          <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn" onclick="wrapTag('<b>', '</b>')">B</button>
+            <button type="button" class="toolbar-btn" onclick="wrapTag('<i>', '</i>')">I</button>
+            <button type="button" class="toolbar-btn" onclick="wrapTag('<u>', '</u>')">U</button>
+            <button type="button" class="toolbar-btn" onclick="wrapTag('<h3>', '</h3>')">H3</button>
+            <button type="button" class="toolbar-btn" onclick="insertLink()">🔗</button>
+            <button type="button" class="toolbar-btn" onclick="insertImage()">🖼️</button>
+            <select id="font-size-select" class="toolbar-select" onchange="applyFontSize()">
+              <option value="">字号</option>
+              <option value="0.9rem">小</option>
+              <option value="1rem">标准</option>
+              <option value="1.2rem">中</option>
+              <option value="1.4rem">大</option>
+              <option value="1.8rem">超大</option>
+            </select>
+            <input id="font-color-picker" class="toolbar-color" type="color" value="#00e676" onchange="applyColor()"/>
+            <button type="button" class="toolbar-btn" onclick="applyAlign('left')">⬅️</button>
+            <button type="button" class="toolbar-btn" onclick="applyAlign('center')">⬇️</button>
+            <button type="button" class="toolbar-btn" onclick="applyAlign('right')">➡️</button>
+            <button type="button" class="toolbar-btn" onclick="wrapTag('<hr/>')">➖</button>
+          </div>
+          <textarea id="post-content" name="content" class="editor-textarea" placeholder="输入内容 (支持 HTML)..."
+            required></textarea>
+        </div>
+
+        <div class="form-group" style="display:flex; gap:10px;">
+          <button type="submit" class="btn btn-primary">提交 / 更新</button>
+          <button type="button" class="btn" onclick="previewPost()" style="background:var(--accent-color); color:#000;">预览</button>
+          <button type="button" class="btn" onclick="resetForm()" style="background:#ccc;color:#333;">重置</button>
+        </div>
+      </form>
+    </section>
+
   </main>
+
+  <!-- Preview Modal -->
+  <div id="preview-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closePreview()">&times;</span>
+      <h2 id="preview-title" style="border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">预览标题</h2>
+      <div id="preview-content" class="preview-body"></div>
+    </div>
+  </div>
+
 
   <footer>
     <div class="theme-switcher">
@@ -152,6 +217,43 @@
 
   <script>
     const API_URL = '/api/posts';
+
+    // View Switching
+    function showEditor(reset = false) {
+      document.getElementById('post-list-section').style.display = 'none';
+      document.getElementById('editor-section').style.display = 'block';
+      if (reset) {
+        resetForm();
+      }
+    }
+
+    function showList() {
+      document.getElementById('editor-section').style.display = 'none';
+      document.getElementById('post-list-section').style.display = 'block';
+      fetchPosts(); // Refresh list
+    }
+
+    // Preview
+    function previewPost() {
+      const title = document.getElementById('post-title').value || '无标题';
+      const content = document.getElementById('post-content').value || '无内容';
+      
+      document.getElementById('preview-title').innerText = title;
+      document.getElementById('preview-content').innerHTML = content;
+      document.getElementById('preview-modal').style.display = 'block';
+    }
+
+    function closePreview() {
+      document.getElementById('preview-modal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('preview-modal');
+      if (event.target == modal) {
+        modal.style.display = "none";
+      }
+    }
 
     function wrapTag(openTag, closeTag = '') {
       const textarea = document.getElementById('post-content');
@@ -244,9 +346,9 @@
           body: JSON.stringify(body)
         });
         if (res.ok) {
-          resetForm();
-          fetchPosts();
           alert(id ? '更新成功' : '发布成功');
+          resetForm();
+          showList(); // Go back to list
         } else {
           alert('操作失败');
         }
@@ -257,12 +359,12 @@
     });
 
     function editPost(post) {
+      showEditor(false); // Show editor without clearing first (we will overwrite)
       document.getElementById('form-title').innerText = '编辑指令: ' + post.id.substring(0, 8);
       document.getElementById('post-id').value = post.id;
       document.getElementById('post-title').value = post.title;
       document.getElementById('post-content').value = post.content;
-      document.getElementById('post-status').value = post.status || 'draft';
-      document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('post-status').value = post.status || 'published'; // Default to published if undefined, though usually has value
     }
 
     async function deletePost(id) {
@@ -277,6 +379,8 @@
       document.getElementById('post-form').reset();
       document.getElementById('post-id').value = '';
       document.getElementById('form-title').innerText = '发布指令';
+      // Ensure status is published by default
+      document.getElementById('post-status').value = 'published';
     }
 
     async function logout() {
