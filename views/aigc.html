@@ -106,6 +106,52 @@
       position: relative;
     }
 
+    /* Lightbox Styles */
+    #lightbox-modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.95);
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    #lightbox-modal.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    #lightbox-img {
+      max-width: 95%;
+      max-height: 95%;
+      border: 2px solid var(--accent-color);
+      box-shadow: 0 0 50px rgba(var(--accent-color-rgb), 0.3);
+      object-fit: contain;
+      cursor: zoom-out;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      color: #fff;
+      font-size: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 2001;
+      transition: color 0.3s;
+    }
+
+    .lightbox-close:hover {
+      color: var(--accent-color);
+    }
+
     .close-modal {
       position: absolute;
       top: 10px;
@@ -175,6 +221,12 @@
     </div>
   </div>
 
+  <!-- Lightbox Modal -->
+  <div id="lightbox-modal">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Full View">
+  </div>
+
   <footer>
     <div class="theme-switcher" aria-label="切换主题">
       <div class="theme-btn" data-theme="eva-00" title="零号机 (Yellow)"></div>
@@ -194,6 +246,11 @@
     const altDisplay = document.getElementById('alt-text-display');
     const closeModal = document.querySelector('.close-modal');
     const copyBtn = document.getElementById('copy-alt-btn');
+    
+    // Lightbox Elements
+    const lightbox = document.getElementById('lightbox-modal');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.querySelector('.lightbox-close');
 
     // Load Images
     async function loadImages() {
@@ -215,6 +272,8 @@
             imageEl.src = img.url;
             imageEl.alt = img.alt;
             imageEl.loading = 'lazy';
+            imageEl.style.cursor = 'zoom-in';
+            imageEl.onclick = () => openLightbox(img.url);
             
             // Alt Button
             const btn = document.createElement('button');
@@ -276,6 +335,32 @@
         setTimeout(() => copyBtn.textContent = originalText, 2000);
       });
     };
+
+    // Lightbox Logic
+    function openLightbox(url) {
+      lightboxImg.src = url;
+      lightbox.classList.add('show');
+    }
+
+    function closeLightboxFunc() {
+      lightbox.classList.remove('show');
+      setTimeout(() => lightboxImg.src = '', 300);
+    }
+
+    lightboxClose.onclick = closeLightboxFunc;
+    
+    lightbox.onclick = (e) => {
+      if (e.target === lightbox) {
+        closeLightboxFunc();
+      }
+    };
+    
+    // Esc key support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('show')) {
+        closeLightboxFunc();
+      }
+    });
 
     // Initial load
     loadImages();
