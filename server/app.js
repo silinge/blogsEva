@@ -8,7 +8,6 @@ const postsRouter = require('./posts');
 const imagesRouter = require('./images');
 
 const app = express();
-// Image streaming routes (single import)
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -31,7 +30,7 @@ app.use(session({
 app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use(express.static(path.join(__dirname, '../views')));
 
-  db.initDB().then(() => {
+db.initDB().then(() => {
   const adminUser = process.env.ADMIN_USERNAME || 'admin';
   const adminPass = process.env.ADMIN_PASSWORD || 'password';
   console.log(`[startup] Admin Config: Username='${adminUser}', Password Length=${adminPass ? adminPass.length : 0}`);
