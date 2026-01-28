@@ -270,7 +270,8 @@
             // Image
             const imageEl = document.createElement('img');
             imageEl.src = img.url;
-            imageEl.alt = img.alt;
+            // Prefer caption text for alt, fallback to alt if caption missing
+            imageEl.alt = (img.caption || img.alt || 'image');
             imageEl.loading = 'lazy';
             imageEl.style.cursor = 'zoom-in';
             imageEl.onclick = () => openLightbox(img.url);
@@ -281,7 +282,8 @@
             btn.textContent = 'ALT';
             btn.onclick = (e) => {
               e.stopPropagation(); // Prevent other clicks
-              showAlt(img.alt);
+              // Show the caption text if available, otherwise fallback to alt
+              showAlt(img.caption || img.alt || '');
             };
 
             item.appendChild(imageEl);
