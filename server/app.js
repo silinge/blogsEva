@@ -5,6 +5,7 @@ const express = require('express');
 const session = require('express-session');
 const db = require('./db');
 const postsRouter = require('./posts');
+const imagesRouter = require('./images');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ db.initDB().then(() => {
 
   // API routes under /api
   app.use('/api', postsRouter);
+  app.use('/api', imagesRouter);
   // Authentication endpoints
   app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
@@ -52,6 +54,7 @@ db.initDB().then(() => {
 
   // Basic routes
   app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../views/index.html')));
+  app.get('/aigc', (req, res) => res.sendFile(path.join(__dirname, '../views/aigc.html')));
   app.get('/post/:id', (req, res) => res.sendFile(path.join(__dirname, '../views/post.html')));
   app.get('/admin', (req, res) => {
     if (req.session && req.session.user) {

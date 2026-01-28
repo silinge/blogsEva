@@ -8,10 +8,11 @@
     "build": "echo Build step (skeleton)"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
+    "exifr": "^7.1.3",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
-    "sqlite3": "^5.0.11",
-    "dotenv": "^16.0.0"
+    "sqlite3": "^5.0.11"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
