@@ -8,10 +8,7 @@ const postsRouter = require('./posts');
 const imagesRouter = require('./images');
 
 const app = express();
-// Image streaming routes
-const imagesRouter = require('./images');
-// Image streaming routes
-const imagesRouter = require('./images');
+// Image streaming routes (single import)
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
@@ -42,8 +39,6 @@ app.use(express.static(path.join(__dirname, '../views')));
   // API routes under /api
   app.use('/api', postsRouter);
   // Images API routes
-  app.use('/api', imagesRouter);
-  app.use('/api', imagesRouter);
   app.use('/api', imagesRouter);
   // Authentication endpoints
   app.post('/api/login', (req, res) => {
