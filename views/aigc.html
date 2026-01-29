@@ -22,14 +22,14 @@
     <div id="gallery" class="gallery-grid"></div>
     <div id="loading" class="loading-sentinel">SYSTEM SYNCING...</div>
   </main>
-  <div id="alt-modal" class="modal" style="display:none;">
-    <div class="modal-content" style="background:#fff;padding:20px;">
-      <span class="close-modal" style="cursor:pointer;float:right;font-size:20px;">×</span>
-      <div id="alt-text-display" style="white-space:pre-wrap;margin-top:8px;"></div>
-      <button id="copy-alt-btn" class="copy-btn" style="margin-top:8px;">复制内容</button>
+  <div id="alt-modal" class="modal" style="display:none;position:fixed;inset:0;z-index:3001;background:rgba(0,0,0,0.5);">
+    <div class="modal-content" style="background:#fff;padding:20px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:500px;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+      <span class="close-modal" style="cursor:pointer;float:right;font-size:20px;font-weight:bold;">×</span>
+      <div id="alt-text-display" style="white-space:pre-wrap;margin-top:24px;max-height:60vh;overflow-y:auto;"></div>
+      <button id="copy-alt-btn" class="copy-btn" style="margin-top:16px;padding:6px 12px;cursor:pointer;">复制内容</button>
     </div>
   </div>
-  <div id="lightbox-modal" class="lightbox-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);justify-content:center;align-items:center;">
+  <div id="lightbox-modal" class="lightbox-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);justify-content:center;align-items:center;z-index:3000;">
     <img id="lightbox-img" src="" alt="Full View" style="max-width:90%;max-height:90%;border:2px solid #fff;box-shadow:0 0 40px rgba(0,0,0,.6);"/>
   </div>
   <footer>
