@@ -52,6 +52,9 @@ db.initDB().then(() => {
   app.post('/api/logout', (req, res) => {
     req.session.destroy(() => res.json({ success: true }));
   });
+  app.get('/api/auth/status', (req, res) => {
+    res.json({ isAdmin: !!(req.session && req.session.user) });
+  });
 
   // Basic routes
   app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../views/index.html')));

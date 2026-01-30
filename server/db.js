@@ -52,9 +52,39 @@ function initDB() {
           }
           return reject(err);
         }
-        resolve(true);
+
+        // Initialize captions table
+        db.run(`CREATE TABLE IF NOT EXISTS image_captions (
+          filename TEXT PRIMARY KEY,
+          caption TEXT
+        )`, [], (err) => {
+          if (err) return reject(err);
+          resolve(true);
+        });
       });
     });
+  });
+}
+
+function getCaptions(filenames) {
+  return new Promise((resolve, reject) => {
+    if (!filenames || filenames.length === 0) return resolve([]);
+    const placeholders = filenames.map(() => '?').join(',');
+    db.all(`SELECT * FROM image_captions WHERE filename IN (${placeholders})`, filenames, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+}
+
+function updateCaption(filename, caption) {
+  return new Promise((resolve, reject) => {
+    db.run(`INSERT INTO image_captions (filename, caption) VALUES (?, ?)
+            ON CONFLICT(filename) DO UPDATE SET caption = excluded.caption`,
+      [filename, caption], function(err) {
+        if (err) return reject(err);
+        resolve(this.changes);
+      });
   });
 }
 
@@ -120,5 +150,7 @@ module.exports = {
   getPost,
   createPost,
   updatePost,
-  deletePost
+  deletePost,
+  getCaptions,
+  updateCaption
 };

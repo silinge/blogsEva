@@ -41,6 +41,7 @@
   </footer>
   <script>
     let page = 1, loading = false, hasMore = true;
+    let isAdmin = false;
     const gallery = document.getElementById('gallery');
     const loadingEl = document.getElementById('loading');
     const altModal = document.getElementById('alt-modal');
@@ -49,10 +50,64 @@
     const copyAltBtn = document.getElementById('copy-alt-btn');
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxClose = () => lightboxModal.style.display = 'none';
+    const lightboxClose = () => { lightboxModal.style.display = 'none'; lightboxImg.src = ''; };
 
-    function showAlt(text) {
-      altDisplay.textContent = text || '';
+    // Check admin status on load
+    fetch('/api/auth/status')
+      .then(res => res.json())
+      .then(data => {
+        isAdmin = data.isAdmin;
+      })
+      .catch(console.error);
+
+    function showAlt(imgData, itemEl) {
+      // Clear previous content
+      altDisplay.innerHTML = '';
+      
+      if (isAdmin) {
+        // Edit mode
+        const textarea = document.createElement('textarea');
+        textarea.style.width = '100%';
+        textarea.style.height = '150px';
+        textarea.style.marginBottom = '10px';
+        textarea.style.padding = '8px';
+        textarea.value = imgData.alt || '';
+        
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.textContent = '保存 / SAVE';
+        saveBtn.onclick = async () => {
+          try {
+            const res = await fetch('/api/images/caption', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ filename: imgData.name, caption: textarea.value })
+            });
+            if (res.ok) {
+              imgData.alt = textarea.value;
+              alert('Saved!');
+              altModal.style.display = 'none';
+              // Update DOM if needed
+              const imgEl = itemEl.querySelector('img');
+              if (imgEl) imgEl.alt = textarea.value;
+            } else {
+              alert('Failed to save');
+            }
+          } catch (e) {
+            console.error(e);
+            alert('Error saving');
+          }
+        };
+        
+        altDisplay.appendChild(textarea);
+        altDisplay.appendChild(saveBtn);
+        copyAltBtn.style.display = 'none'; // Hide copy button in edit mode
+      } else {
+        // View mode
+        altDisplay.textContent = imgData.alt || 'No description available.';
+        copyAltBtn.style.display = 'inline-block';
+      }
+      
       altModal.style.display = 'block';
     }
 
@@ -69,19 +124,32 @@
             item.className = 'gallery-item';
 
             const imageEl = document.createElement('img');
-            imageEl.src = img.url;
-            imageEl.alt = (img.caption || img.alt || '图片');
+            imageEl.src = img.thumb || img.url; // Use thumbnail if available
+            imageEl.alt = img.alt || '图片';
             imageEl.loading = 'lazy';
             imageEl.onclick = () => { lightboxImg.src = img.url; lightboxModal.style.display = 'flex'; };
 
+            // Create ALT button wrapper
+            // Only show ALT button if admin OR if there is content to show
+            // User requested: "Remove export...". "Admin... edit".
+            // I'll show it for admin always. For visitors, only if alt text exists.
+            
             const btn = document.createElement('button');
             btn.className = 'alt-btn';
             btn.textContent = 'ALT';
             btn.onclick = (e) => {
               e.stopPropagation();
-              showAlt(img.caption || img.alt || img.url);
+              showAlt(img, item);
             };
-
+            
+            // Logic: Always append, let click handler decide content? 
+            // Or hide if not admin AND empty?
+            // "Remove export...". This implies visitor shouldn't see "garbage" or raw metadata.
+            // If empty, visitor sees nothing.
+            // Since we load isAdmin async, we might render before we know.
+            // But usually fetch is fast. To be safe, we can just append it.
+            // If visitor and empty, maybe click shows "No description".
+            
             item.appendChild(imageEl);
             item.appendChild(btn);
             gallery.appendChild(item);
