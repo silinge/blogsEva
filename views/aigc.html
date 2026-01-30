@@ -9,8 +9,18 @@
     .gallery-grid { column-count: 2; column-gap: 20px; padding: 20px 0; }
     @media (max-width: 900px) { .gallery-grid { column-count: 1; } }
     .gallery-item { break-inside: avoid; margin-bottom: 20px; position: relative; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
-    .gallery-item img { width: 100%; height: auto; display: block; }
-    .alt-btn { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,.6); color: #fff; border-radius: 4px; border: 1px solid rgba(255,255,255,.3); padding: 4px 8px; font-size: .75rem; cursor: pointer; }
+    .gallery-item img { width: 100%; height: auto; display: block; cursor: pointer; transition: opacity 0.3s; }
+    .gallery-item img:hover { opacity: 0.9; }
+    .alt-btn { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,.6); color: #fff; border-radius: 4px; border: 1px solid rgba(255,255,255,.3); padding: 4px 8px; font-size: .75rem; cursor: pointer; z-index: 10; }
+    
+    /* Lightbox Controls */
+    .lb-control { position: absolute; color: white; cursor: pointer; user-select: none; z-index: 3010; font-weight: bold; transition: 0.3s; background: rgba(0,0,0,0.5); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .lb-control:hover { background: rgba(255,255,255,0.2); }
+    .lb-close { top: 20px; right: 20px; font-size: 24px; }
+    .lb-prev { top: 50%; left: 20px; transform: translateY(-50%); font-size: 24px; }
+    .lb-next { top: 50%; right: 20px; transform: translateY(-50%); font-size: 24px; }
+    .lb-play { bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+    .active-play { background: rgba(0, 255, 0, 0.5) !important; color: #000; }
   </style>
 </head>
 <body>
@@ -30,7 +40,11 @@
     </div>
   </div>
   <div id="lightbox-modal" class="lightbox-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);justify-content:center;align-items:center;z-index:3000;">
-    <img id="lightbox-img" src="" alt="Full View" style="max-width:90%;max-height:90%;border:2px solid #fff;box-shadow:0 0 40px rgba(0,0,0,.6);"/>
+    <span class="lb-control lb-close" title="Close">×</span>
+    <span class="lb-control lb-prev" title="Previous">&#10094;</span>
+    <span class="lb-control lb-next" title="Next">&#10095;</span>
+    <span class="lb-control lb-play" title="Auto Play/Pause">▶</span>
+    <img id="lightbox-img" src="" alt="Full View" style="max-width:90%;max-height:80%;border:2px solid #fff;box-shadow:0 0 40px rgba(0,0,0,.6); transition: opacity 0.3s;"/>
   </div>
   <footer>
     <div class="theme-switcher" aria-label="切换主题">
@@ -42,15 +56,115 @@
   <script>
     let page = 1, loading = false, hasMore = true;
     let isAdmin = false;
+    let allImages = []; // Track all loaded images for navigation
+    let currentIndex = -1;
+    let slideshowInterval = null;
+
     const gallery = document.getElementById('gallery');
     const loadingEl = document.getElementById('loading');
     const altModal = document.getElementById('alt-modal');
     const altDisplay = document.getElementById('alt-text-display');
     const closeModal = document.querySelector('.close-modal');
     const copyAltBtn = document.getElementById('copy-alt-btn');
+    
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxClose = () => { lightboxModal.style.display = 'none'; lightboxImg.src = ''; };
+    const lbClose = document.querySelector('.lb-close');
+    const lbPrev = document.querySelector('.lb-prev');
+    const lbNext = document.querySelector('.lb-next');
+    const lbPlay = document.querySelector('.lb-play');
+
+    const closeLightbox = () => { 
+      lightboxModal.style.display = 'none'; 
+      lightboxImg.src = ''; 
+      stopSlideshow();
+    };
+
+    const openLightbox = (index) => {
+      if (index >= 0 && index < allImages.length) {
+        currentIndex = index;
+        updateLightboxImage();
+        lightboxModal.style.display = 'flex';
+      }
+    };
+
+    const updateLightboxImage = () => {
+      const img = allImages[currentIndex];
+      lightboxImg.style.opacity = 0;
+      setTimeout(() => {
+        lightboxImg.src = img.url; // Always load full quality in lightbox
+        lightboxImg.onload = () => { lightboxImg.style.opacity = 1; };
+      }, 150);
+    };
+
+    const showNext = (e) => {
+      if (e) e.stopPropagation();
+      if (currentIndex < allImages.length - 1) {
+        currentIndex++;
+      } else {
+        currentIndex = 0; // Loop back to start
+      }
+      updateLightboxImage();
+    };
+
+    const showPrev = (e) => {
+      if (e) e.stopPropagation();
+      if (currentIndex > 0) {
+        currentIndex--;
+      } else {
+        currentIndex = allImages.length - 1; // Loop to end
+      }
+      updateLightboxImage();
+    };
+
+    const toggleSlideshow = (e) => {
+      if (e) e.stopPropagation();
+      if (slideshowInterval) {
+        stopSlideshow();
+      } else {
+        startSlideshow();
+      }
+    };
+
+    const startSlideshow = () => {
+      lbPlay.classList.add('active-play');
+      lbPlay.textContent = '❚❚'; // Pause symbol
+      slideshowInterval = setInterval(() => {
+        showNext();
+      }, 3000); // 3 seconds per slide
+    };
+
+    const stopSlideshow = () => {
+      lbPlay.classList.remove('active-play');
+      lbPlay.textContent = '▶'; // Play symbol
+      if (slideshowInterval) {
+        clearInterval(slideshowInterval);
+        slideshowInterval = null;
+      }
+    };
+
+    // Lightbox Event Listeners
+    lbClose.onclick = (e) => { e.stopPropagation(); closeLightbox(); };
+    lbPrev.onclick = showPrev;
+    lbNext.onclick = showNext;
+    lbPlay.onclick = toggleSlideshow;
+    
+    // Close on background click
+    lightboxModal.onclick = (e) => {
+      if (e.target === lightboxModal) {
+        closeLightbox();
+      }
+    };
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (lightboxModal.style.display === 'flex') {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') showNext();
+        if (e.key === 'ArrowLeft') showPrev();
+        if (e.key === ' ') { e.preventDefault(); toggleSlideshow(); }
+      }
+    });
 
     // Check admin status on load
     fetch('/api/auth/status')
@@ -120,6 +234,10 @@
         const data = await res.json();
         if (data.images && data.images.length > 0) {
           data.images.forEach(img => {
+            // Track image for navigation
+            const imgIndex = allImages.length;
+            allImages.push(img);
+
             const item = document.createElement('div');
             item.className = 'gallery-item';
 
@@ -127,7 +245,7 @@
             imageEl.src = img.thumb || img.url; // Use thumbnail if available
             imageEl.alt = img.alt || '图片';
             imageEl.loading = 'lazy';
-            imageEl.onclick = () => { lightboxImg.src = img.url; lightboxModal.style.display = 'flex'; };
+            imageEl.onclick = () => { openLightbox(imgIndex); };
 
             // Create ALT button wrapper
             // Only show ALT button if admin OR if there is content to show
@@ -186,10 +304,8 @@
 
     closeModal.onclick = () => altModal.style.display = 'none';
     window.onclick = (e) => { if (e.target === altModal) altModal.style.display = 'none'; };
-    lightboxClose = () => { lightboxModal.style.display = 'none'; lightboxImg.src = ''; };
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { lightboxModal.style.display = 'none'; }
-    });
+    // lightboxClose removed, handled by lbClose and background click above
+    // document.addEventListener('keydown'...) handled above
 
     // Initial load
     loadImages();
